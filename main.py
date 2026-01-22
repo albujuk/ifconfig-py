@@ -3,23 +3,20 @@ from fastapi.responses import PlainTextResponse
 from importlib.metadata import metadata, PackageNotFoundError
 from pydantic import BaseModel, Field
 
-
 try:
     meta = metadata("ifconfig-py")
     version = meta["Version"]
     name = meta["Name"]
     summary = meta["Summary"]
-
 except PackageNotFoundError:
     version = "dev"
     name = "ifconfig-py"
     summary = "A Python implementation of ifconfig.me, built with FastAPI"
 
-
 app: FastAPI = FastAPI(
     title=name,
     summary=summary,
-    version=version,
+    version=version
 )
 
 
@@ -60,18 +57,21 @@ def get_info(request: Request) -> ClientInfo:
 
 
 @app.get(
-    "/", summary="Get your IP address", description="Returns the client's IP address"
+    "/",
+    summary="Get your IP address",
+    description="Returns the client's IP address",
 )
-def root(request: Request) -> PlainTextResponse:
-    return get_ip(request)
+def root(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    return PlainTextResponse(info.ip)
 
 
 @app.get(
-    "/ip", summary="Get your IP address", description="Returns the client's IP address"
+    "/ip",
+    summary="Get your IP address",
+    description="Returns the client's IP address",
 )
-def get_ip(request: Request) -> PlainTextResponse:
-    client_host: str = request.client.host if request.client else "Unknown"
-    return PlainTextResponse(client_host)
+def get_ip(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    return PlainTextResponse(info.ip)
 
 
 @app.get(
@@ -79,9 +79,8 @@ def get_ip(request: Request) -> PlainTextResponse:
     summary="Get User-Agent",
     description="Returns the client's User-Agent header",
 )
-def get_ua(request: Request) -> PlainTextResponse:
-    user_agent: str = request.headers.get("user-agent", "Unknown")
-    return PlainTextResponse(user_agent)
+def get_ua(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    return PlainTextResponse(info.user_agent)
 
 
 @app.get(
@@ -89,9 +88,8 @@ def get_ua(request: Request) -> PlainTextResponse:
     summary="Get Accept-Encoding",
     description="Returns the client's Accept-Encoding header",
 )
-def get_encoding(request: Request) -> PlainTextResponse:
-    accept_encoding: str = request.headers.get("accept-encoding", "None")
-    return PlainTextResponse(accept_encoding)
+def get_encoding(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    return PlainTextResponse(info.accept_encoding)
 
 
 @app.get(
@@ -99,9 +97,8 @@ def get_encoding(request: Request) -> PlainTextResponse:
     summary="Get Accept-Language",
     description="Returns the client's Accept-Language header",
 )
-def get_lang(request: Request) -> PlainTextResponse:
-    accept_language: str = request.headers.get("accept-language", "None")
-    return PlainTextResponse(accept_language)
+def get_lang(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    return PlainTextResponse(info.accept_language)
 
 
 @app.get(
@@ -114,7 +111,31 @@ def get_lang(request: Request) -> PlainTextResponse:
     summary="Get Accept header (alias)",
     description="Returns the client's Accept header (alias /mime)",
 )
-def get_accept(request: Request) -> PlainTextResponse:
-    accept: str = request.headers.get("accept", "None")
-    return PlainTextResponse(accept)
+def get_accept(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    return PlainTextResponse(info.accept)
+
+
+@app.get(
+    "/all",
+    summary="Get all client information as plain text",
+    description="Returns all collected client information in a human-readable plain text format.",
+)
+def get_all(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    return PlainTextResponse(str(info))
+
+
+@app.get(
+    "/all.json",
+    summary="Get all client information as JSON",
+    description="Returns all collected client information as a JSON object",
+    response_model=ClientInfo,
+)
+@app.get(
+    "/json",
+    summary="Get all client information as JSON",
+    description="Returns all collected client information as a JSON object",
+    response_model=ClientInfo,
+)
+def get_json(info: ClientInfo = Depends(get_info)) -> ClientInfo:
+    return info
 
