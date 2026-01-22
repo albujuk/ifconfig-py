@@ -1,22 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import PlainTextResponse
 from importlib.metadata import metadata, PackageNotFoundError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-class ClientInfo(BaseModel):
-    ip: str
-    user_agent: str
-    accept_encoding: str
-    accept_language: str
-    accept: str
-    def __str__(self) -> str:
-        return (
-            f"IP: {self.ip}\n"
-            f"User-Agent: {self.user_agent}\n"
-            f"Accept-Encoding: {self.accept_encoding}\n"
-            f"Accept-Language: {self.accept_language}\n"
-            f"Accept: {self.accept}"
-        )
 
 try:
     meta = metadata("ifconfig-py")
@@ -35,6 +21,42 @@ app: FastAPI = FastAPI(
     summary=summary,
     version=version,
 )
+
+
+class ClientInfo(BaseModel):
+    ip: str = Field(..., description="Client IP address")
+    user_agent: str = Field(..., description="Client User-Agent")
+    accept_encoding: str = Field(..., description="Client Accept-Encoding")
+    accept_language: str = Field(..., description="Client Accept-Language")
+    accept: str = Field(..., description="Client Accept header (MIME types)")
+
+    _IRREGULAR_DISPLAY_LABELS = {
+        "ip": "IP",
+    }
+
+    def __str__(self) -> str:
+        """Human-readable string representation."""
+        return "\n".join(
+            f"{self._IRREGULAR_DISPLAY_LABELS.get(name, name.title().replace('_', '-'))}: {getattr(self, name)}"
+            for name in type(self).model_fields
+            if getattr(self, name) is not None
+        )
+
+
+def get_info(request: Request) -> ClientInfo:
+    client_host: str = request.client.host if request.client else "Unknown"
+    user_agent: str = request.headers.get("user-agent", "Unknown")
+    accept_encoding: str = request.headers.get("accept-encoding", "None")
+    accept_language: str = request.headers.get("accept-language", "None")
+    accept: str = request.headers.get("accept", "None")
+
+    return ClientInfo(
+        ip=client_host,
+        user_agent=user_agent,
+        accept_encoding=accept_encoding,
+        accept_language=accept_language,
+        accept=accept,
+    )
 
 
 @app.get(
