@@ -1,7 +1,22 @@
 from fastapi import FastAPI, Request
-from starlette.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse
 from importlib.metadata import metadata, PackageNotFoundError
+from pydantic import BaseModel
 
+class ClientInfo(BaseModel):
+    ip: str
+    user_agent: str
+    accept_encoding: str
+    accept_language: str
+    accept: str
+    def __str__(self) -> str:
+        return (
+            f"IP: {self.ip}\n"
+            f"User-Agent: {self.user_agent}\n"
+            f"Accept-Encoding: {self.accept_encoding}\n"
+            f"Accept-Language: {self.accept_language}\n"
+            f"Accept: {self.accept}"
+        )
 
 try:
     meta = metadata("ifconfig-py")
