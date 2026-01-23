@@ -13,11 +13,7 @@ except PackageNotFoundError:
     name = "ifconfig-py"
     summary = "A Python implementation of ifconfig.me, built with FastAPI"
 
-app: FastAPI = FastAPI(
-    title=name,
-    summary=summary,
-    version=version
-)
+app: FastAPI = FastAPI(title=name, summary=summary, version=version)
 
 
 class ClientInfo(BaseModel):
@@ -39,9 +35,20 @@ class ClientInfo(BaseModel):
             if getattr(self, name) is not None
         )
 
+def get_client_ip(request: Request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip
+
+    return request.client.host if request.client else "Unknown"
+
 
 def get_info(request: Request) -> ClientInfo:
-    client_host: str = request.client.host if request.client else "Unknown"
+    client_host: str = get_client_ip(request)
     user_agent: str = request.headers.get("user-agent", "Unknown")
     accept_encoding: str = request.headers.get("accept-encoding", "None")
     accept_language: str = request.headers.get("accept-language", "None")
@@ -138,4 +145,3 @@ def get_all(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
 )
 def get_json(info: ClientInfo = Depends(get_info)) -> ClientInfo:
     return info
-
