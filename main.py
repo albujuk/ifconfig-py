@@ -35,19 +35,38 @@ class ClientInfo(BaseModel):
             if getattr(self, name) is not None
         )
 
+
 def get_client_ip(request: Request) -> str:
+    """
+    Extract client IP address with proper proxy/load balancer handling.
+
+    Checks forwarding headers in order of preference:
+    1. X-Forwarded-For (standard, can contain chain)
+    2. X-Real-IP (nginx)
+    3. Direct connection IP
+    """
+    # X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2, ...)
+    # The first IP is the original client
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
 
+    # Fallback to X-Real-IP (nginx)
     real_ip = request.headers.get("x-real-ip")
     if real_ip:
         return real_ip
 
+    # Fallback to direct connection
     return request.client.host if request.client else "Unknown"
 
 
 def get_info(request: Request) -> ClientInfo:
+    """
+    Extract comprehensive client information from request headers.
+
+    Gathers client IP, user agent, and various accept headers into a
+    ClientInfo model for dependency injection into route handlers.
+    """
     client_host: str = get_client_ip(request)
     user_agent: str = request.headers.get("user-agent", "Unknown")
     accept_encoding: str = request.headers.get("accept-encoding", "None")
@@ -69,6 +88,7 @@ def get_info(request: Request) -> ClientInfo:
     description="Returns the client's IP address",
 )
 def root(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Root endpoint returning client IP address as plain text."""
     return PlainTextResponse(info.ip)
 
 
@@ -78,6 +98,7 @@ def root(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     description="Returns the client's IP address",
 )
 def get_ip(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Return client IP address as plain text."""
     return PlainTextResponse(info.ip)
 
 
@@ -87,6 +108,7 @@ def get_ip(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     description="Returns the client's User-Agent header",
 )
 def get_ua(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Return client User-Agent header as plain text."""
     return PlainTextResponse(info.user_agent)
 
 
@@ -96,6 +118,7 @@ def get_ua(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     description="Returns the client's Accept-Encoding header",
 )
 def get_encoding(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Return client Accept-Encoding header as plain text."""
     return PlainTextResponse(info.accept_encoding)
 
 
@@ -105,6 +128,7 @@ def get_encoding(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     description="Returns the client's Accept-Language header",
 )
 def get_lang(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Return client Accept-Language header as plain text."""
     return PlainTextResponse(info.accept_language)
 
 
@@ -119,6 +143,7 @@ def get_lang(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     description="Returns the client's Accept header (alias /mime)",
 )
 def get_accept(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Return client Accept header (MIME types) as plain text."""
     return PlainTextResponse(info.accept)
 
 
@@ -128,6 +153,7 @@ def get_accept(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     description="Returns all collected client information in a human-readable plain text format.",
 )
 def get_all(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Return all client information in human-readable plain text format."""
     return PlainTextResponse(str(info))
 
 
@@ -144,4 +170,5 @@ def get_all(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     response_model=ClientInfo,
 )
 def get_json(info: ClientInfo = Depends(get_info)) -> ClientInfo:
+    """Return all client information as a JSON object."""
     return info
