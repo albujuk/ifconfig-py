@@ -1,7 +1,10 @@
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from importlib.metadata import metadata, PackageNotFoundError
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from fastapi.templating import Jinja2Templates
+from datetime import datetime
 
 try:
     meta = metadata("ifconfig-py")
@@ -15,6 +18,8 @@ except PackageNotFoundError:
 
 app: FastAPI = FastAPI(title=name, summary=summary, version=version)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 class ClientInfo(BaseModel):
     ip: str = Field(..., description="Client IP address")
@@ -22,6 +27,9 @@ class ClientInfo(BaseModel):
     accept_encoding: str = Field(..., description="Client Accept-Encoding")
     accept_language: str = Field(..., description="Client Accept-Language")
     accept: str = Field(..., description="Client Accept header (MIME types)")
+    forwarded_for: str | None = Field(None, description="X-Forwarded-For header value")
+    real_ip: str | None = Field(None, description="X-Real-IP header value")
+    referer: str | None = Field(None, description="Referer header value")
 
     _IRREGULAR_DISPLAY_LABELS = {
         "ip": "IP",
@@ -72,6 +80,9 @@ def get_info(request: Request) -> ClientInfo:
     accept_encoding: str = request.headers.get("accept-encoding", "None")
     accept_language: str = request.headers.get("accept-language", "None")
     accept: str = request.headers.get("accept", "None")
+    forwarded_for: str | None = request.headers.get("x-forwarded-for")
+    real_ip: str | None = request.headers.get("x-real-ip")
+    referer: str | None = request.headers.get("referer")
 
     return ClientInfo(
         ip=client_host,
@@ -79,17 +90,34 @@ def get_info(request: Request) -> ClientInfo:
         accept_encoding=accept_encoding,
         accept_language=accept_language,
         accept=accept,
+        forwarded_for=forwarded_for,
+        real_ip=real_ip,
+        referer=referer,
     )
+
+
+templates = Jinja2Templates(directory="templates")
 
 
 @app.get(
     "/",
     summary="Get your IP address",
-    description="Returns the client's IP address",
+    description="Returns your IP address as plain text if requested via curl, or as an HTML page if requested via a browser",
 )
-def root(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
-    """Root endpoint returning client IP address as plain text."""
-    return PlainTextResponse(info.ip)
+def root(request: Request, info: ClientInfo = Depends(get_info)) -> Response:
+    """Root endpoint that returns IP as plain text for CLI tools or as an HTML page for browsers."""
+    if info.user_agent.lower().find("curl") != -1:
+        return PlainTextResponse(info.ip)
+    else:
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "info": info,
+                "info_str": str(info),
+                "current_year": datetime.now().year,
+            },
+        )
 
 
 @app.get(
@@ -145,6 +173,16 @@ def get_lang(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
 def get_accept(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
     """Return client Accept header (MIME types) as plain text."""
     return PlainTextResponse(info.accept)
+
+
+@app.get(
+    "/forwarded",
+    summary="Get forwarding chain",
+    description="Returns X-Forwarded-For if present, otherwise the resolved client IP",
+)
+def get_forwarded(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
+    """Return forwarding chain or the best-known client IP."""
+    return PlainTextResponse(info.forwarded_for or info.real_ip or info.ip)
 
 
 @app.get(

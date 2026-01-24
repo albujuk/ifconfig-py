@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is My IP Address?</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>What Is My IP Address?</h1>
+
+        <div class="info-section">
+            <h2>Your Connection</h2>
+            <div class="info-grid">
+                <div class="info-label">IP Address</div>
+                <div class="info-value ip-address">{{ info.ip }}</div>
+
+                <div class="info-label">User Agent</div>
+                <div class="info-value">{{ info.user_agent }}</div>
+
+                <div class="info-label">Language</div>
+                <div class="info-value">{{ info.accept_language }}</div>
+
+                <div class="info-label">Referer</div>
+                <div class="info-value">{{ info.referer or 'None' }}</div>
+
+
+                <div class="info-label">Encoding</div>
+                <div class="info-value">{{ info.accept_encoding }}</div>
+
+                <div class="info-label">MIME Type</div>
+                <div class="info-value">{{ info.accept }}</div>
+
+
+                <div class="info-label">X-Forwarded-For</div>
+                <div class="info-value">{{ info.forwarded_for or info.real_ip or 'None' }}</div>
+            </div>
+        </div>
+
+        <div class="command-section">
+            <h2>Command Line Interface</h2>
+
+            <div class="command-block" data-copy="curl ifconfig.me">
+                <span class="prompt">$ </span><span class="command">curl</span> <span class="url">ifconfig.me</span>
+                <span class="arrow">⇒</span> <span class="output">{{ info.ip }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/ip">
+                <span class="prompt">$ </span><span class="command">curl</span> <span class="url">ifconfig.me/ip</span>
+                <span class="arrow">⇒</span> <span class="output">{{ info.ip }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/ua">
+                <span class="prompt">$ </span><span class="command">curl</span> <span class="url">ifconfig.me/ua</span>
+                <span class="arrow">⇒</span> <span class="output">{{ info.user_agent }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/lang">
+                <span class="prompt">$ </span><span class="command">curl</span> <span
+                    class="url">ifconfig.me/lang</span> <span class="arrow">⇒</span> <span class="output">{{
+                    info.accept_language }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/encoding">
+                <span class="prompt">$ </span><span class="command">curl</span> <span
+                    class="url">ifconfig.me/encoding</span> <span class="arrow">⇒</span> <span class="output">{{
+                    info.accept_encoding }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/mime">
+                <span class="prompt">$ </span><span class="command">curl</span> <span
+                    class="url">ifconfig.me/mime</span> <span class="arrow">⇒</span> <span class="output">{{ info.accept
+                    }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/forwarded">
+                <span class="prompt">$ </span><span class="command">curl</span> <span
+                    class="url">ifconfig.me/forwarded</span> <span class="arrow">⇒</span> <span class="output">{{
+                    info.forwarded_for or info.real_ip or info.ip }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/all">
+                <span class="prompt">$ </span><span class="command">curl</span> <span class="url">ifconfig.me/all</span>
+                <span class="arrow">⇒</span><br>
+                <span class="output">{{ info_str }}
+                    <div class="copy-feedback">Copied!</div>
+            </div>
+
+            <div class="command-block" data-copy="curl ifconfig.me/all.json">
+                <span class="prompt">$ </span><span class="command">curl</span> <span
+                    class="url">ifconfig.me/all.json</span> <span class="arrow">⇒</span><br>
+                <span class="output">{{ info.model_dump() }}</span>
+                <div class="copy-feedback">Copied!</div>
+            </div>
+        </div>
+
+        <footer>
+            © {{ current_year }}
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', path='js/script.js') }}"></script>
+</body>
+
+</html>

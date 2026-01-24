@@ -4,7 +4,7 @@ A Python implementation of [ifconfig.me](https://ifconfig.me), built with FastAP
 
 ## Overview
 
-ifconfig-py is a lightweight web service that returns information about the client. 
+ifconfig-py is a lightweight web service that returns information about the client.
 This project serves as a practical learning playground for DevOps practices including containerization, orchestration, and proxy configuration.
 
 ## Features
@@ -16,11 +16,10 @@ This project serves as a practical learning playground for DevOps practices incl
 
 ### TODO
 
-- [ ] JSON response format with IP and headers
+- [X] JSON response format with IP and headers
+- [x] Additional endpoints (e.g., `/all`, `/all.json`, `/json`)
 - [ ] HTML response with server-side rendering
 - [ ] Content negotiation based on Accept header
-- [ ] Additional endpoints (e.g., `/all`, `/all.json`, `/json`)
-
 
 ## Tech Stack
 
@@ -30,7 +29,7 @@ This project serves as a practical learning playground for DevOps practices incl
 
 ## Project Structure
 
-```
+```tree
 ifconfig-py/
 ├── main.py
 ├── pyproject.toml
