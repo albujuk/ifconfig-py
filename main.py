@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
+import pathlib
 
 try:
     meta = metadata("ifconfig-py")
@@ -19,6 +20,21 @@ except PackageNotFoundError:
 app: FastAPI = FastAPI(title=name, summary=summary, version=version)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
+
+
+ua_path = pathlib.Path(__file__).parent / "cli-ua.txt"
+if ua_path.exists():
+    with ua_path.open("r") as f:
+        cli_ua = f.read().splitlines()
+else:
+    cli_ua = []
+
+
+def is_cli_ua(ua: str) -> bool:
+    """Determine if the client is a CLI tool based on User-Agent."""
+    return any(client in ua.lower() for client in cli_ua)
 
 
 class ClientInfo(BaseModel):
@@ -96,9 +112,6 @@ def get_info(request: Request) -> ClientInfo:
     )
 
 
-templates = Jinja2Templates(directory="templates")
-
-
 @app.get(
     "/",
     summary="Get your IP address",
@@ -106,7 +119,7 @@ templates = Jinja2Templates(directory="templates")
 )
 def root(request: Request, info: ClientInfo = Depends(get_info)) -> Response:
     """Root endpoint that returns IP as plain text for CLI tools or as an HTML page for browsers."""
-    if info.user_agent.lower().find("curl") != -1:
+    if is_cli_ua(info.user_agent):
         return PlainTextResponse(info.ip)
     else:
         return templates.TemplateResponse(
@@ -120,6 +133,7 @@ def root(request: Request, info: ClientInfo = Depends(get_info)) -> Response:
         )
 
 
+# region API Endpoints
 @app.get(
     "/ip",
     summary="Get your IP address",
@@ -210,3 +224,16 @@ def get_all(info: ClientInfo = Depends(get_info)) -> PlainTextResponse:
 def get_json(info: ClientInfo = Depends(get_info)) -> ClientInfo:
     """Return all client information as a JSON object."""
     return info
+
+
+@app.get(
+    "/health",
+    summary="Health check endpoint",
+    description="Returns 200 OK if the service is healthy",
+)
+def health_check() -> PlainTextResponse:
+    """Health check endpoint to verify service is running."""
+    return PlainTextResponse("OK")
+
+
+# endregion
