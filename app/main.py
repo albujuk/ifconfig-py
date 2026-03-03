@@ -19,12 +19,14 @@ except PackageNotFoundError:
 
 app: FastAPI = FastAPI(title=name, summary=summary, version=version)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+_base_dir = pathlib.Path(__file__).parent
 
-templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory=_base_dir / "static"), name="static")
+
+templates = Jinja2Templates(directory=_base_dir / "templates")
 
 
-ua_path = pathlib.Path(__file__).parent / "cli-ua.txt"
+ua_path = _base_dir / "data" / "cli-ua.txt"
 if ua_path.exists():
     with ua_path.open("r") as f:
         cli_ua = f.read().splitlines()

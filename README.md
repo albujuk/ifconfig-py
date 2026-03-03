@@ -9,10 +9,10 @@ This project serves as a practical learning playground for DevOps practices incl
 
 ## Features
 
-- ✅ Returns client IP address in plain text to be used in CLI
-- ✅ Returns user agent information
-- ✅ Lightweight and fast with FastAPI
-- ✅ Ready for containerization and deployment
+- Returns client IP address in plain text to be used in CLI
+- Returns user agent information
+- Lightweight and fast with FastAPI
+- Ready for containerization and deployment
 
 ### TODO
 
@@ -39,21 +39,26 @@ This project serves as a practical learning playground for DevOps practices incl
 
 ```tree
 ifconfig-py
-├── cli-ua.txt
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── data/
+│   │   └── cli-ua.txt
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── styles.css
+│   │   └── js/
+│   │       └── script.js
+│   └── templates/
+│       └── index.html
+├── docker/
+│   └── entrypoint.sh
 ├── Dockerfile
 ├── .dockerignore
 ├── .gitignore
-├── main.py
 ├── pyproject.toml
 ├── .python-version
 ├── README.md
-├── static/
-│   ├── css/
-│   │   └── styles.css
-│   └── js/
-│       └── script.js
-├── templates/
-│   └── index.html
 └── uv.lock
 ```
 ## Contributing
