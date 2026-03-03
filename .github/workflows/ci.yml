@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Dependencies
+        run: uv sync --no-dev
+
+      - name: Start Application
+        run: uv run fastapi run app/main.py &
+
+      - name: Wait for Application Startup
+        run: |
+          for i in $(seq 1 10); do
+            curl -sf http://127.0.0.1:8000/health && exit 0
+            sleep 1
+          done
+          echo "Application failed to start"
+          exit 1
+
+      - name: Health Check
+        run: curl -LSfs http://127.0.0.1:8000/health
