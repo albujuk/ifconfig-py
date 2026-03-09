@@ -22,6 +22,8 @@ wheels/
 # Docker files
 .dockerignore
 Dockerfile
+docker-compose.yml
+nginx/
 
 # Readme files
 README.md
