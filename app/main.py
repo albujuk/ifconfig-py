@@ -131,6 +131,7 @@ def root(request: Request, info: ClientInfo = Depends(get_info)) -> Response:
                 "info": info,
                 "info_str": str(info),
                 "current_year": datetime.now().year,
+                "host": request.headers.get("host", request.base_url.netloc),
             },
         )
 
