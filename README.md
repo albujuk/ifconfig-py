@@ -14,7 +14,9 @@ This project serves as a practical learning playground for DevOps practices incl
 - JSON and plain text output formats
 - Lightweight and fast with FastAPI
 - Favicon and PWA manifest icons for browser experience
+- Dynamic host display in page title and CLI examples
 - Multi-stage Docker build with health checks
+- Docker Compose setup with nginx reverse proxy
 - Multi-architecture images (amd64, arm64)
 - CI/CD pipeline with GitHub Actions
 
@@ -59,7 +61,17 @@ fastapi run app/main.py
 docker run -p 8000:8000 albujuk/ifconfig-py
 ```
 
-The service will be available at `http://localhost:8000`.
+#### With Docker Compose
+
+Run the app behind an nginx reverse proxy:
+
+```bash
+docker compose up -d
+```
+
+This starts the app and an nginx reverse proxy on port 80. The nginx config forwards `X-Forwarded-For`, `X-Real-IP`, and `Host` headers so the service returns the correct client IP.
+
+The service will be available at `http://localhost` (port 80).
 
 ### CLI Examples
 
@@ -97,6 +109,16 @@ curl http://localhost:8000/health     # Health check
 docker pull albujuk/ifconfig-py
 docker run -p 8000:8000 albujuk/ifconfig-py
 ```
+
+### Docker Compose
+
+Run with nginx reverse proxy:
+
+```bash
+docker compose up -d
+```
+
+The nginx reverse proxy listens on port 80 and forwards requests to the app, passing through client headers (`X-Forwarded-For`, `X-Real-IP`, `Host`).
 
 ### Build Locally
 
@@ -183,6 +205,9 @@ ifconfig-py
 │       └── cd.yml
 ├── docker/
 │   └── entrypoint.sh
+├── nginx/
+│   └── nginx.conf
+├── docker-compose.yml
 ├── Dockerfile
 ├── .dockerignore
 ├── .gitignore
@@ -200,9 +225,9 @@ ifconfig-py
 - [x] Docker multi-stage build optimization
 - [x] Health check endpoint (`/health`)
 - [x] CI/CD pipeline setup (GitHub Actions: smoke tests + Docker Hub push)
+- [x] Reverse proxy configuration examples (nginx)
+- [x] docker-compose.yml
 - [x] Multi-architecture Docker images (amd64, arm64)
-- [ ] Reverse proxy configuration examples (nginx)
-- [ ] docker-compose.yml
 - [ ] Automated tests (unit + integration)
 - [ ] Content negotiation based on Accept header
 - [ ] Prometheus metrics endpoint
