@@ -15,6 +15,7 @@ This project serves as a practical learning playground for DevOps practices incl
 - Lightweight and fast with FastAPI
 - Favicon and PWA manifest icons for browser experience
 - Multi-stage Docker build with health checks
+- Multi-architecture images (amd64, arm64)
 - CI/CD pipeline with GitHub Actions
 
 ## Usage
@@ -104,6 +105,15 @@ docker build -t ifconfig-py .
 docker run -p 8000:8000 ifconfig-py
 ```
 
+### Multi-Architecture Build
+
+The image is published for `linux/amd64` and `linux/arm64`. To build locally for multiple platforms:
+
+```bash
+docker buildx create --name multiarch --use
+docker buildx build --platform linux/amd64,linux/arm64 -t ifconfig-py .
+```
+
 ### Build Args
 
 | Arg | Default | Description |
@@ -129,6 +139,7 @@ docker run -p 9000:9000 -e PORT=9000 albujuk/ifconfig-py
 ### Image Details
 
 - **Base**: Python 3.14 on Alpine 3.23
+- **Platforms**: `linux/amd64`, `linux/arm64`
 - **Build**: Multi-stage (builder + runtime) for minimal image size
 - **Security**: Runs as non-root `appuser`
 - **Health check**: Built-in via `GET /health` (30s interval, 3s timeout, 3 retries)
@@ -139,7 +150,7 @@ docker run -p 9000:9000 -e PORT=9000 albujuk/ifconfig-py
 - **Language**: Python 3.14
 - **Server**: Uvicorn (via `fastapi[standard]`)
 - **Package Manager**: uv
-- **Containerization**: Docker (multi-stage Alpine build)
+- **Containerization**: Docker (multi-stage Alpine build, multiarch via buildx)
 - **CI/CD**: GitHub Actions (smoke tests + Docker Hub push)
 
 ## Project Structure
@@ -189,6 +200,7 @@ ifconfig-py
 - [x] Docker multi-stage build optimization
 - [x] Health check endpoint (`/health`)
 - [x] CI/CD pipeline setup (GitHub Actions: smoke tests + Docker Hub push)
+- [x] Multi-architecture Docker images (amd64, arm64)
 - [ ] Reverse proxy configuration examples (nginx)
 - [ ] docker-compose.yml
 - [ ] Automated tests (unit + integration)

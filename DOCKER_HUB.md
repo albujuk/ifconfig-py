@@ -64,9 +64,17 @@ docker run -p 9000:9000 -e PORT=9000 albujuk/ifconfig-py
 
 When running behind a reverse proxy (nginx, Traefik, etc.), make sure to forward the `X-Forwarded-For` header so the service returns the correct client IP.
 
+## Supported Architectures
+
+| Architecture | Tag |
+|---|---|
+| `linux/amd64` | `latest` |
+| `linux/arm64` | `latest` |
+
 ## Image Details
 
 - **Base**: Python 3.14 on Alpine 3.23
+- **Platforms**: `linux/amd64`, `linux/arm64`
 - **Build**: Multi-stage build for minimal image size
 - **Security**: Runs as non-root user (`appuser`)
 - **Health check**: Built-in via `GET /health` (30s interval, 3s timeout, 3 retries)
