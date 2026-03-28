@@ -14,7 +14,10 @@ This project serves as a practical learning playground for DevOps practices incl
 - JSON and plain text output formats
 - Lightweight and fast with FastAPI
 - Favicon and PWA manifest icons for browser experience
+- Dynamic host display in page title and CLI examples
 - Multi-stage Docker build with health checks
+- Docker Compose setup with nginx reverse proxy
+- Multi-architecture images (amd64, arm64)
 - CI/CD pipeline with GitHub Actions
 
 ## Usage
@@ -58,7 +61,17 @@ fastapi run app/main.py
 docker run -p 8000:8000 albujuk/ifconfig-py
 ```
 
-The service will be available at `http://localhost:8000`.
+#### With Docker Compose
+
+Run the app behind an nginx reverse proxy:
+
+```bash
+docker compose up -d
+```
+
+This starts the app and an nginx reverse proxy on port 80. The nginx config forwards `X-Forwarded-For`, `X-Real-IP`, and `Host` headers so the service returns the correct client IP.
+
+The service will be available at `http://localhost` (port 80).
 
 ### CLI Examples
 
@@ -97,11 +110,30 @@ docker pull albujuk/ifconfig-py
 docker run -p 8000:8000 albujuk/ifconfig-py
 ```
 
+### Docker Compose
+
+Run with nginx reverse proxy:
+
+```bash
+docker compose up -d
+```
+
+The nginx reverse proxy listens on port 80 and forwards requests to the app, passing through client headers (`X-Forwarded-For`, `X-Real-IP`, `Host`).
+
 ### Build Locally
 
 ```bash
 docker build -t ifconfig-py .
 docker run -p 8000:8000 ifconfig-py
+```
+
+### Multi-Architecture Build
+
+The image is published for `linux/amd64` and `linux/arm64`. To build locally for multiple platforms:
+
+```bash
+docker buildx create --name multiarch --use
+docker buildx build --platform linux/amd64,linux/arm64 -t ifconfig-py .
 ```
 
 ### Build Args
@@ -129,6 +161,7 @@ docker run -p 9000:9000 -e PORT=9000 albujuk/ifconfig-py
 ### Image Details
 
 - **Base**: Python 3.14 on Alpine 3.23
+- **Platforms**: `linux/amd64`, `linux/arm64`
 - **Build**: Multi-stage (builder + runtime) for minimal image size
 - **Security**: Runs as non-root `appuser`
 - **Health check**: Built-in via `GET /health` (30s interval, 3s timeout, 3 retries)
@@ -139,7 +172,7 @@ docker run -p 9000:9000 -e PORT=9000 albujuk/ifconfig-py
 - **Language**: Python 3.14
 - **Server**: Uvicorn (via `fastapi[standard]`)
 - **Package Manager**: uv
-- **Containerization**: Docker (multi-stage Alpine build)
+- **Containerization**: Docker (multi-stage Alpine build, multiarch via buildx)
 - **CI/CD**: GitHub Actions (smoke tests + Docker Hub push)
 
 ## Project Structure
@@ -172,6 +205,9 @@ ifconfig-py
 │       └── cd.yml
 ├── docker/
 │   └── entrypoint.sh
+├── nginx/
+│   └── nginx.conf
+├── docker-compose.yml
 ├── Dockerfile
 ├── .dockerignore
 ├── .gitignore
@@ -189,8 +225,9 @@ ifconfig-py
 - [x] Docker multi-stage build optimization
 - [x] Health check endpoint (`/health`)
 - [x] CI/CD pipeline setup (GitHub Actions: smoke tests + Docker Hub push)
-- [ ] Reverse proxy configuration examples (nginx)
-- [ ] docker-compose.yml
+- [x] Reverse proxy configuration examples (nginx)
+- [x] docker-compose.yml
+- [x] Multi-architecture Docker images (amd64, arm64)
 - [ ] Automated tests (unit + integration)
 - [ ] Content negotiation based on Accept header
 - [ ] Prometheus metrics endpoint
